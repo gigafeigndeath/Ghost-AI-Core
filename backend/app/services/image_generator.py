@@ -1,5 +1,5 @@
 import requests
-from . import config
+from .. import config
 
 def generate_image(prompt: str) -> str:
     # API Kandinsky (адаптируй под актуальный endpoint; это пример)

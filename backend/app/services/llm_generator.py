@@ -1,6 +1,6 @@
 from langchain.llms import GigaChat  # Импорт из LangChain (нужен langchain-community для GigaChat)
 from langchain.prompts import PromptTemplate
-from . import config
+from .. import config  # Или конкретно: from ..config import GIGACHAT_CLIENT_ID, GIGACHAT_CLIENT_SECRET, etc.
 
 # Инициализация GigaChat (нужен langchain-community, добавь в requirements если нужно: langchain-community)
 llm = GigaChat(
