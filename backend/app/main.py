@@ -1,6 +1,13 @@
 from fastapi import FastAPI
-from .routes.api import router as api_router
+from .routes.api import router as api_router  # Connect router from routes/api.py (english comment)
 
-app = FastAPI(title="PR AI Agent Backend")
+app = FastAPI(
+    title="PR AI Agent Backend",
+    description="Автономный PR-агент: парсит статьи, генерит посты для Telegram/VK/VC с таймингом и картинками Kandinsky",
+    version="1.0.0",
+    openapi_url="/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
 
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router)  # Без prefix — nginx добавит /api/
