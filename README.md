@@ -26,3 +26,11 @@ cd backend
 cp .env.example .env  # заполни ключи API
 docker build -t ghost-ai-backend .
 docker run -d -p 8000:8000 --env-file .env ghost-ai-backend
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
