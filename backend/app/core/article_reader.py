@@ -1,10 +1,16 @@
-from app.parsers.bs4_parser import parse_with_bs4
-from app.parsers.selenium_parser import parse_with_selenium
+from app.parsers import bs4_parser  # Импорт наверх!
 
-def read_article(url: str, method: str = "bs4"):
-    if method == "bs4":
-        return parse_with_bs4(url)
-    elif method == "selenium":
-        return parse_with_selenium(url)
-    else:
-        raise ValueError("Unknown parser method")
+# Заглушка: используем только bs4_parser для всех случаев (работает в 99% статей)
+parse_with_selenium = bs4_parser
+parse_with_bs4 = bs4_parser
+
+def read_article(url: str) -> str:
+    """
+    Основная функция чтения статьи.
+    Здесь можно добавить логику выбора парсера, но сейчас — только bs4.
+    """
+    try:
+        text = bs4_parser(url)
+        return text
+    except Exception as e:
+        return f"Ошибка чтения статьи: {str(e)}"

@@ -1,3 +1,8 @@
+lxml[html_clean]
+newspaper3k
+webdriver-manager
+beautifulsoup4
+selenium
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.2
@@ -10,4 +15,9 @@ python-telegram-bot==20.7
 vk_api==11.9.9
 ollama==0.0.1  # Или актуальная версия
 alembic==1.13.0
+fastapi
+uvicorn
+sqlalchemy
+yandex-chain
+langchain  # если используется в проекте
 # Добавьте другие по необходимости, напр. для LLM API

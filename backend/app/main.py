@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from app.api import analyze, media, health, publish
 from app.db.session import engine
-from app.models import Base
+# from app.models import Base
 
 # Создаем таблицы в БД при запуске
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Ghost AI PR Agent",

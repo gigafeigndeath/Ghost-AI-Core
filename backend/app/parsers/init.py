@@ -1,4 +1,4 @@
-from .bs4_parser import parse_with_bs4
+from .bs4_parser import parse_with_bs4  # если есть отдельный bs4_parser.py
 from .selenium_parser import parse_with_selenium
 
 def get_parser(method: str):

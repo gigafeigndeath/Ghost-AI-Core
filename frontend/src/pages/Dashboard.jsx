@@ -7,8 +7,90 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [posts, setPosts] = useState([])
   const [copiedIndex, setCopiedIndex] = useState(null)
+ 
+const handleAnalyze = async () => {
+    if (!articleUrl.trim()) return;
 
-  const handleAnalyze = async () => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/generate_posts?url=${encodeURIComponent(articleUrl.trim())}`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) throw new Error('Ошибка');
+        const data = await response.json();
+        // обработка data (посты)
+    } catch (err) {
+        // ошибка
+    }
+};
+
+const handleAnalyze = async () => {
+    if (!articleUrl.trim()) return;
+
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/generate_posts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: articleUrl.trim() })  // точный JSON с "url"
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Ошибка обработки');
+        }
+
+        const data = await response.json();
+        // обработка data (посты, картинки)
+    } catch (err) {
+        // показ "Ошибка обработки статьи"
+    }
+};
+
+
+const handleAnalyze = async () => {
+    if (!articleUrl.trim()) return;
+
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/generate_posts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: articleUrl.trim() })  // точный JSON с "url"
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Ошибка обработки');
+        }
+
+        const data = await response.json();
+        // обработка data (посты, картинки)
+    } catch (err) {
+        // показ "Ошибка обработки статьи"
+    }
+}
+
+const handleSubmit = async (articleUrl) => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/generate_posts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',  // ключевой заголовок
+            },
+            body: JSON.stringify({ url: articleUrl.trim() })  // ключевой фикс — JSON с "url"
+        });
+
+        if (!response.ok) throw new Error('Error');
+        const data = await response.json();
+        // обработка data (посты, картинки)
+    } catch (err) {
+        // ошибка
+    }
+};
+const handleAnalyze = async () => {
     if (!url) return
     setLoading(true)
     try {
