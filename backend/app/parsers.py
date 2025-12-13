@@ -21,3 +21,16 @@ def newspaper_parser(url: str) -> str:
 # Если есть get_parser — верни newspaper_parser
 def get_parser(parser_type: str = "newspaper"):
     return newspaper_parser
+
+def bs4_parser(url: str) -> str:
+    # Твой код bs4_parser из предыдущих фиксов
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        r = requests.get(url, headers=headers, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for trash in soup(["script", "style", "nav", "header", "footer", "aside"]):
+            trash.decompose()
+        text = soup.get_text(separator=" ", strip=True)
+        return text[:8000]
+    except:
+        return "Ошибка парсинга"
