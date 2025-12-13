@@ -1,0 +1,13 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+sqlalchemy==2.0.23
+beautifulsoup4==4.12.2
+selenium==4.16.0
+requests==2.31.0
+python-telegram-bot==20.7
+vk_api==11.9.9
+ollama==0.0.1  # Или актуальная версия
+alembic==1.13.0
+# Добавьте другие по необходимости, напр. для LLM API
