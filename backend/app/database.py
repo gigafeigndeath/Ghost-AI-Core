@@ -1,21 +1,29 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from .config import DATABASE_URL
+from sqlalchemy import create_engine  
+from sqlalchemy.ext.declarative import declarative_base  
+from sqlalchemy.orm import sessionmaker  
+from sqlalchemy import Column, Integer, String  
+from dotenv import load_dotenv  
+import os  
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+load_dotenv()  
 
-# Пример модели для хранения медиапланов (расширь по нужде)
-from sqlalchemy import Column, Integer, String, DateTime
-from datetime import datetime
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///pr_agent.db")  # Fallback на sqlite  
 
-class MediaPlan(Base):
-    __tablename__ = "media_plans"
-    id = Column(Integer, primary_key=True, index=True)
-    article_url = Column(String, index=True)
-    generated_content = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
+engine = create_engine(DATABASE_URL)  
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  
+Base = declarative_base()  
 
-Base.metadata.create_all(bind=engine)
+class MediaPlan(Base):  
+    __tablename__ = "media_plans"  
+    id = Column(Integer, primary_key=True, index=True)  
+    article_url = Column(String, index=True)  
+    generated_content = Column(String)  
+
+Base.metadata.create_all(bind=engine)  
+
+def get_db():  
+    db = SessionLocal()  
+    try:  
+        yield db  
+    finally:  
+        db.close()  

@@ -1,18 +1,21 @@
-import requests
-from bs4 import BeautifulSoup
+import requests  
+from bs4 import BeautifulSoup  
+from urllib.parse import urlparse, urlunparse  
 
-def parse_article(url: str) -> dict:
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Вычлениваем ключевые элементы (адаптируй под реальные статьи)
-    title = soup.find('title').text if soup.find('title') else "No title"
-    facts = [p.text for p in soup.find_all('p')[:5]]  # Первые 5 параграфов как факты
-    quotes = [blockquote.text for blockquote in soup.find_all('blockquote')]
-    
-    return {
-        "title": title,
-        "facts": facts,
-        "quotes": quotes,
-        "source_url": url
-    }
+HEADERS = {  
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  
+}  
+
+def parse_article(url: str) -> dict:  
+    parsed = urlparse(url)  
+    clean_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))  
+    try:  
+        response = requests.get(url, headers=HEADERS, timeout=15)  
+        response.raise_for_status()  
+    except:  
+        return {"title": "Ошибка загрузки заголовка", "source_url": clean_url}  
+    soup = BeautifulSoup(response.text, 'html.parser')  
+    title = (soup.find('meta', {'property': 'og:title'})['content'].strip() if soup.find('meta', {'property': 'og:title'}) else  
+             soup.find('h1').text.strip() if soup.find('h1') else  
+             soup.title.text.strip() if soup.title else "Без заголовка")  
+    return {"title": title, "source_url": clean_url}  

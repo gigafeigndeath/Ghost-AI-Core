@@ -1,9 +1,17 @@
-fastapi==0.104.1
-uvicorn==0.24.0.post1
-python-dotenv==1.0.0
-beautifulsoup4==4.12.2
-requests==2.31.0
-langchain==0.0.352  # Для оркестрации LLM
-sqlalchemy==2.0.23
-pydantic==2.5.2
-gigachat
+fastapi==0.115.0  
+uvicorn==0.30.6  
+langchain==0.3.0  
+langchain-community==0.3.0  
+gigachat==0.1.9  # Для GigaChat API  
+beautifulsoup4==4.12.3  
+requests==2.32.3  
+sqlalchemy==2.0.35  
+pydantic==2.9.2  
+python-dotenv==1.0.1  
+lxml==5.3.0  # Для BS4  
+urllib3==2.2.3  
+# Опционально для Kandinsky (если используете Fusion Brain API)  
+# pillow==10.4.0  
+# Для автопостинга (если добавите)  
+# python-telegram-bot==21.5  
+# vk_api==11.9.9  
