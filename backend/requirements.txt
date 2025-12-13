@@ -1,5 +1,8 @@
-fastapi
-uvicorn
-requests
-beautifulsoup4
-python-dotenv
+fastapi==0.104.1
+uvicorn==0.24.0.post1
+python-dotenv==1.0.0
+beautifulsoup4==4.12.2
+requests==2.31.0
+langchain==0.0.352  # Для оркестрации LLM
+sqlalchemy==2.0.23
+pydantic==2.5.2
