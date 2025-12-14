@@ -28,7 +28,7 @@ export default function Home() {
             className="px-6 py-4 rounded-lg border border-gray-300 text-lg w-full max-w-md"
           />
           <Link
-            to="/dashboard"
+            to={url.trim() ? `/dashboard?url=${encodeURIComponent(url.trim())}` : '/dashboard'}
             className="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition flex items-center justify-center"
           >
             Обработать новость <ArrowRight className="ml-2" />
