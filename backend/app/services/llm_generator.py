@@ -1,6 +1,9 @@
 from langchain_community.llms import GigaChat  
-from langchain.prompts import PromptTemplate  
-from langchain.chains import LLMChain  
+
+# Вместо старого LLMChain
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
 from dotenv import load_dotenv  
 import os  
 import requests  
@@ -65,29 +68,27 @@ def fallback_posts(article_data: dict) -> dict:
 
     return {"telegram": telegram, "vk": vk, "blog": blog}  
 
-def generate_posts(article_data: dict) -> dict:  
-    title = article_data.get("title", "Новость")  
-    source_url = article_data.get("source_url", "")  
-    prompt_template = PromptTemplate(  
-        input_variables=["title", "source_url"],  
-        template="""  
-Ты PR-агент. На основе заголовка новости "{title}" сгенерируй 3 полноценных поста (каждый 400-600 символов, coherentный нарратив в 2–3 раза длиннее заголовка, с вымышленными деталями/фактами/метриками/цитатами для полноты):  
-- Telegram: коротко, по делу, только факты, с ⚡, начать с "Срочно!". Закончить ссылкой: {source_url}  
-- VK: дружелюбно, с 😊🚀, на "ты", вопрос к аудитории. Начать с "Привет, друзья!". Закончить ссылкой.  
-- Бизнес-блог VC: профессионально, акцент на бизнес-успех/метрики. Начать с "Стратегический обзор:". Закончить ссылкой.  
+def generate_posts(article_data: dict) -> dict:
+    title = article_data.get("title", "Новость")
+    source_url = article_data.get("source_url", "")
 
-Верни ТОЛЬКО JSON: {{"telegram": "текст", "vk": "текст", "blog": "текст"}}  
-        """  
-    )  
-    chain = LLMChain(llm=llm, prompt=prompt_template)  
-    try:  
-        response = chain.run(title=title, source_url=source_url)  
-        response = response.strip().replace('```json', '').replace('```', '')  
-        posts = json.loads(response)  
-    except:  
-        posts = {  
-            "telegram": f"⚡ Срочно! {title}. Подробности в материале: {source_url}",  
-            "vk": f"Привет, друзья! 😊 {title}. Что думаете? 🚀 Источник: {source_url}",  
-            "blog": f"Стратегический обзор: {title}. Это влияет на рынок. Читайте: {source_url}"  
-        }  
+    prompt_template = PromptTemplate.from_template("""
+Ты PR-агент. На основе заголовка новости "{title}" сгенерируй 3 полноценных поста (каждый 400-600 символов, coherentный нарратив в 2–3 раза длиннее заголовка, с вымышленными деталями/фактами/метриками/цитатами для полноты):
+- Telegram: коротко, по делу, только факты, с ⚡, начать с "Срочно!". Закончить ссылкой: {source_url}
+- VK: дружелюбно, с 😊🚀, на "ты", вопрос к аудитории. Закончить ссылкой.
+- Бизнес-блог VC: профессионально, акцент на бизнес-успех/метрики. Закончить ссылкой.
+Верни ТОЛЬКО JSON: {{"telegram": "текст", "vk": "текст", "blog": "текст"}}
+    """)
+
+    # Новый способ: prompt | llm | parser
+    chain = prompt_template | llm | StrOutputParser()
+
+    try:
+        response = chain.invoke({"title": title, "source_url": source_url})
+        response = response.strip().replace('```json', '').replace('```', '').strip()
+        posts = json.loads(response)
+    except Exception as e:
+        logging.error(f"Ошибка парсинга LLM: {e}")
+        posts = fallback_posts(article_data)
+
     return posts

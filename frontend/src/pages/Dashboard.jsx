@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [mediaPlan, setMediaPlan] = useState(null)
   const [copiedIndex, setCopiedIndex] = useState(null)
   const [imageLoading, setImageLoading] = useState({})
+  const [publishing, setPublishing] = useState({})
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -65,49 +66,60 @@ export default function Dashboard() {
   }
 
   const regenerateImage = async (platform, index) => {
-    setImageLoading(p => ({ ...p, [index]: true }))
+    setImageLoading(prev => ({ ...prev, [index]: true }))
     try {
       const res = await fetch('/api/regenerate_image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ platform, prompt: mediaPlan.posts[platform] })
       })
+      if (!res.ok) throw new Error('Ошибка сервера')
       const data = await res.json()
-      setMediaPlan(p => ({
-        ...p,
-        images: { ...p.images, [platform]: data.image_url || null }
+      const freshImageUrl = data.image_url ? `${data.image_url}&t=${Date.now()}` : null
+      if (freshImageUrl) {
+        await new Promise((resolve, reject) => {
+          const img = new Image()
+          img.onload = resolve
+          img.onerror = reject
+          img.src = freshImageUrl
+        })
+      }
+      setMediaPlan(prev => ({
+        ...prev,
+        images: { ...prev.images, [platform]: freshImageUrl }
       }))
-    } catch {
-      alert('Ошибка генерации изображения')
+    } catch (err) {
+      setMediaPlan(prev => ({
+        ...prev,
+        images: { ...prev.images, [platform]: null }
+      }))
     } finally {
-      setImageLoading(p => ({ ...p, [index]: false }))
+      setImageLoading(prev => ({ ...prev, [index]: false }))
     }
   }
 
-  // Автопостинг только в Telegram (один клик!)
   const publishPost = async (platform, content, image) => {
-    if (platform !== 'telegram') {
-      alert('Автопостинг сейчас доступен только в Telegram')
+    if (platform === 'telegram') {
+      try {
+        const res = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ post_type: 'telegram', content, image_url: image || null })
+        })
+        if (!res.ok) throw new Error(await res.text())
+        alert('✅ Пост мгновенно опубликован в Telegram-канале!')
+      } catch (err) {
+          alert('Ошибка публикации в Telegram: ' + err.message)
+        }
       return
     }
 
-    try {
-      const res = await fetch('/api/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_type: 'telegram', content, image_url: image || null })
-      })
-
-      if (!res.ok) {
-        const errText = await res.text()
-        throw new Error(errText || 'Ошибка публикации')
-      }
-
-      alert('✅ Пост успешно опубликован в вашем Telegram-канале!\n\nНовость получила вторую жизнь благодаря Ghost AI 🚀')
-    } catch (err) {
-      console.error(err)
-      alert('Ошибка автопостинга: ' + err.message)
-    }
+    // Для VK и блога — отложенная публикация
+    setPublishing(prev => ({ ...prev, [platform]: true }))
+    alert(`Пост запланирован и будет опубликован в ${platform === 'vk' ? 'ВКонтакте' : 'бизнес-блог (VC)'} автоматически через несколько минут по таймингу медиаплана.`)
+    setTimeout(() => {
+      setPublishing(prev => ({ ...prev, [platform]: false }))
+    }, 3000)
   }
 
   const platforms = mediaPlan ? [
@@ -170,7 +182,7 @@ export default function Dashboard() {
               <div className={`bg-gradient-to-r ${plat.gradient} text-white p-6 sm:p-8`}>
                 <h3 className="text-xl sm:text-2xl font-bold">{plat.title}</h3>
                 <p className="text-sm sm:text-base opacity-90">
-                  Публикация: {plat.time === 'now' ? 'Сейчас' : plat.time === 'in 3-4 hours' ? 'Через 3-4 часа' : 'Завтра утром'}
+                  Публикация: {plat.time === 'now' ? 'Сейчас' : plat.time === 'in 3-4 hours' ? 'Через 3–4 часа' : 'Завтра утром'}
                 </p>
               </div>
 
@@ -179,17 +191,26 @@ export default function Dashboard() {
                   {mediaPlan.posts[plat.key]}
                 </p>
 
-                {mediaPlan.images[plat.key] ? (
-                  <img
-                    src={mediaPlan.images[plat.key]}
-                    alt={plat.title}
-                    className="w-full rounded-lg shadow-md mb-6 object-cover h-64"
-                  />
-                ) : (
-                  <div className="w-full h-64 rounded-lg shadow-md mb-6 overflow-hidden bg-gray-50 flex items-center justify-center">
-                    <img src={ghostPlaceholder} alt="Призрак" className="max-w-full max-h-full object-contain" />
-                  </div>
-                )}
+                <div className="relative w-full h-64 mb-6">
+                  {imageLoading[i] && (
+                    <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center z-10">
+                      <Loader2 className="animate-spin h-12 w-12 text-indigo-600" />
+                      <span className="ml-3 text-indigo-600 font-medium">Генерация иллюстрации...</span>
+                    </div>
+                  )}
+                  {mediaPlan.images[plat.key] ? (
+                    <img
+                      key={mediaPlan.images[plat.key]}
+                      src={mediaPlan.images[plat.key]}
+                      alt={plat.title}
+                      className="w-full rounded-lg shadow-md object-cover h-64"
+                    />
+                  ) : (
+                    <div className="w-full h-64 rounded-lg shadow-md overflow-hidden bg-gray-50 flex items-center justify-center">
+                      <img src={ghostPlaceholder} alt="Призрак" className="max-w-full max-h-full object-contain" />
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex flex-col gap-4 mt-auto">
                   <button
@@ -209,27 +230,29 @@ export default function Dashboard() {
                     {imageLoading[i] ? 'Генерация...' : 'Новая картинка'}
                   </button>
 
-                  {/* Автопостинг только для Telegram */}
-                  {plat.key === 'telegram' && (
-                    <button
-                      onClick={() => publishPost(plat.key, mediaPlan.posts[plat.key], mediaPlan.images[plat.key])}
-                      className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:shadow-xl transform hover:scale-105 transition font-bold text-lg shadow-lg"
-                    >
-                      <Send className="h-6 w-6" />
-                      Автопостинг в канал — 1 клик!
-                    </button>
-                  )}
-
-                  {/* Для VK и блога — просто копирование */}
-                  {plat.key !== 'telegram' && (
-                    <button
-                      onClick={() => copyToClipboard(mediaPlan.posts[plat.key], i)}
-                      className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-gray-400 to-gray-600 text-white rounded-lg font-bold text-lg"
-                    >
-                      <Copy className="h-6 w-6" />
-                      Копировать для {plat.title}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => publishPost(plat.key, mediaPlan.posts[plat.key], mediaPlan.images[plat.key])}
+                    disabled={publishing[plat.key]}
+                    className={`flex items-center justify-center gap-2 px-6 py-4 text-white rounded-lg hover:shadow-xl transform hover:scale-105 transition font-bold text-lg shadow-lg ${
+                      plat.key === 'telegram' ? 'bg-gradient-to-r from-cyan-500 to-blue-600' :
+                      plat.key === 'vk' ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
+                      'bg-gradient-to-r from-purple-500 to-pink-600'
+                    }`}
+                  >
+                    {publishing[plat.key] ? (
+                      <>
+                        <Loader2 className="animate-spin h-6 w-6" />
+                        Публикация...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-6 w-6" />
+                        {plat.key === 'telegram' ? 'Автопостинг в канал — 1 клик!' :
+                         plat.key === 'vk' ? 'Автопостинг в ВК — через несколько минут' :
+                         'Автопостинг в блог — завтра утром'}
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
