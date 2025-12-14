@@ -96,5 +96,20 @@ npm run build
 - Упоминание конкурса в дашборде и документации
 - Легко деплоится на хостинг
 
+---
+
+### Быстрый запуск Backend через PM2
+- Установи PM2 глобально (если ещё нет):textnpm install -g pm2
+- Перейди в папку backend:textcd backend
+- Активируй виртуальное окружение и запусти через PM2:textsource venv/bin/activate
+- pm2 start "uvicorn app.main:app --host 0.0.0.0 --port 8000" --name "ghost-ai-backend"
+
+### Полезные команды PM2:
+- Автозапуск при перезагрузке сервера:textpm2 startup
+- pm2 save
+- Просмотр логов:textpm2 logs ghost-ai-backend
+- Перезапуск:textpm2 restart ghost-ai-backend
+- Мониторинг:textpm2 monit
+
 ### Автоматизируйте PR и дайте новостям вечную жизнь!
 ### Ghost AI Core — ваш универсальный digital-репетитор для PR.
