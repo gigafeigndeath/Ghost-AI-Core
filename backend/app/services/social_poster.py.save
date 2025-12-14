@@ -1,0 +1,76 @@
+import asyncio
+import schedule
+import time
+import threading
+from aiogram import Bot
+from vk_api import VkApi
+from vk_api.upload import VkUpload
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+# Токены из .env (добавь в backend/.env)
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_CHANNEL = os.getenv('TELEGRAM_CHANNEL')  # @channel или ID
+VK_TOKEN = os.getenv('VK_TOKEN')  # User-токен с правами wall
+VK_GROUP_ID = int(os.getenv('VK_GROUP_ID', '0'))  # -ID_группы (отрицательное)
+
+bot = Bot(token=TELEGRAM_TOKEN)
+vk_session = VkApi(token=VK_TOKEN)
+vk_upload = VkUpload(vk_session)
+
+def start_scheduler():
+    """Запускаем schedule в отдельном потоке"""
+    def run():
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+
+async def post_to_telegram(text: str, image_url: str | None = None):
+    if image_url:
+        await bot.send_photo(chat_id=TELEGRAM_CHANNEL, photo=image_url, caption=text)
+    else:
+        await bot.send_message(chat_id=TELEGRAM_CHANNEL, text=text)
+
+def post_to_vk(text: str, image_path: str | None = None):
+    attachments = []
+    if image_path and os.path.exists(image_path):
+        photo = vk_upload.photo_wall(image_path)[0]
+        attachments.append(f"photo{photo['owner_id']}_{photo['id']}")
+    
+    vk_session.method('wall.post', {
+        'owner_id': VK_GROUP_ID,
+        'from_group': 1,
+        'message': text,
+        'attachments': ','.join(attachments)
+    })
+
+# Функция, которую вызовешь из твоего роута после генерации
+def schedule_posts(posts: dict):
+    """
+    posts = {
+        'telegram_now': {'text': '...', 'image': 'url или путь'},
+        'vk_later': {'text': '...', 'image': 'путь к файлу', 'delay_hours': 3},
+        'vc_morning': {'text': '...', 'delay_hours': 12}
+    }
+    """
+    start_scheduler()  # Один раз при старте приложения
+
+    # Telegram — сразу
+    if 'telegram_now' in posts:
+        asyncio.create_task(post_to_telegram(
+            posts['telegram_now']['text'],
+            posts['telegram_now'].get('image')
+        ))
+
+    # VK — через delay_hours
+    if 'vk_later' in posts:
+        p = posts['vk_later']
+        schedule.every(p.get('delay_hours', 3)).hours.do(
+            lambda: post_to_vk(p['text'], p.get('image'))
+        )
+
+    # Для VC-блога — можно просто вернуть текст, пользователь скопирует утром
