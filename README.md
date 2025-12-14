@@ -64,7 +64,7 @@ cp .env.example .env          # Заполните API-ключи
 python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 #### 3. Frontend
 ```bash
@@ -102,7 +102,7 @@ npm run build
 - Установи PM2 глобально (если ещё нет):textnpm install -g pm2
 - Перейди в папку backend:textcd backend
 - Активируй виртуальное окружение и запусти через PM2:textsource venv/bin/activate
-- pm2 start "uvicorn app.main:app --host 0.0.0.0 --port 8000" --name "ghost-ai-backend"
+- pm2 start "uvicorn app.main:app --host 0.0.0.0 --port 8001" --name "ghost-ai-backend"
 
 ### Полезные команды PM2:
 - Автозапуск при перезагрузке сервера:textpm2 startup
